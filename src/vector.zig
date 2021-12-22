@@ -1,21 +1,31 @@
-fn Mixin(comptime Self: type, comptime T: type, comptime n: u3) type {
+fn Mixin(comptime Self: type, comptime Elem: type, comptime n: u3) type {
     return struct {
-        pub const Elem = T;
+        pub const T = Elem;
         pub const dim = n;
         
-        pub fn toArrayPtr(self: *const Self) *const [dim]Elem callconv (.inline) {
-            return @ptrCast(*const [dim]Elem, &self.x);
+        pub fn fill(value: T) Self {
+            var self: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                self.set(value);
+            }
+            return self;
         }
 
-        pub fn toMutArrayPtr(self: *Self) *[dim]Elem {
-            return @ptrCast(*[dim]Elem, &self.x);
+        pub fn toArrayPtr(self: *const Self) *const [dim]T {
+            return @ptrCast(*const [dim]T, &self.x);
         }
 
-        pub fn get(self: Self, i: u2) Elem
+        pub fn toMutArrayPtr(self: *Self) *[dim]T {
+            return @ptrCast(*[dim]T, &self.x);
+        }
+
+        pub fn get(self: Self, i: u2) T
             { return self.toArrayPtr()[i]; }
-        pub fn set(self: *Self, i: u2, value: Elem) void
+        pub fn set(self: *Self, i: u2, value: T) void
             { self.toMutArrayPtr().*[i] = value; }
 
+        /// componentwise addition of two vectors
         pub fn add(lhs: Self, rhs: Self) Self {
             var res: Self = undefined;
             comptime var i = 0;
@@ -24,6 +34,102 @@ fn Mixin(comptime Self: type, comptime T: type, comptime n: u3) type {
             }
             return res;
         }
+
+        /// componentwise subtraction of two vectors
+        pub fn sub(lhs: Self, rhs: Self) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) - rhs.get(i));
+            }
+            return res;
+        }
+
+        /// componentwise multiplication of two vectors
+        pub fn mul(lhs: Self, rhs: Self) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) * rhs.get(i));
+            }
+            return res;
+        }
+
+        /// componentwise division of two vectors
+        pub fn div(lhs: Self, rhs: Self) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) * rhs.get(i));
+            }
+            return res;
+        }
+        
+        /// add scalar to each component
+        pub fn addScalar(lhs: Self, rhs: T) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) + rhs);
+            }
+            return res;
+        }
+
+        /// subtract scalar from each component
+        pub fn subScalar(lhs: Self, rhs: T) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) - rhs);
+            }
+            return res;
+        }
+        /// multiply each component by scalar
+        pub fn mulScalar(lhs: Self, rhs: T) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) * rhs);
+            }
+            return res;
+        }
+
+        /// divide each component by scalar
+        pub fn divScalar(lhs: Self, rhs: T) Self {
+            var res: Self = undefined;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                res.set(i, lhs.get(i) / rhs);
+            }
+            return res;
+        }
+
+        /// sum of components
+        pub fn sum(self: Self) Self {
+            var total: T = 0;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                total += self.get(i);
+            }
+            return total;
+        }
+
+        /// product of components
+        pub fn product(self: Self) Self {
+            var total: T = 0;
+            comptime var i = 0;
+            inline while (i < dim) : (i += 1) {
+                total *= self.get(i);
+            }
+            return total;
+        }
+
+        /// dot product
+        pub fn dot(lhs: Self, rhs: Self) T {
+            return lhs.mul(rhs).sum();
+        }
+
+        
 
     };
 }
