@@ -1,3 +1,7 @@
+const std = @import("std");
+const meta = std.meta;
+const errors = @import("errors.zig");
+
 fn Mixin(comptime Self: type, comptime Elem: type, comptime n: u3) type {
     return struct {
         pub const T = Elem;
@@ -12,13 +16,11 @@ fn Mixin(comptime Self: type, comptime Elem: type, comptime n: u3) type {
             return self;
         }
 
-        pub fn toArrayPtr(self: *const Self) *const [dim]T {
-            return @ptrCast(*const [dim]T, &self.x);
-        }
-
-        pub fn toMutArrayPtr(self: *Self) *[dim]T {
-            return @ptrCast(*[dim]T, &self.x);
-        }
+        // It seems sharpy - xhell
+        pub fn toArrayPtr(self: *const Self) *const [dim]T
+            { return @ptrCast(*const [dim]T, &self.x); }
+        pub fn toMutArrayPtr(self: *Self) *[dim]T
+            { return @ptrCast(*[dim]T, &self.x); }
 
         pub fn get(self: Self, i: u2) T
             { return self.toArrayPtr()[i]; }
@@ -129,12 +131,25 @@ fn Mixin(comptime Self: type, comptime Elem: type, comptime n: u3) type {
             return lhs.mul(rhs).sum();
         }
 
-        
+        /// square magnitude
+        pub fn mag2(self: Self) T {
+            return self.dot(self);
+        }
+
+        /// magnitude
+        pub fn mag(self: Self) T {
+            return std.math.sqrt(self.mag2());
+        }
 
     };
 }
 
-pub fn Vec(comptime T: type, comptime n: u32) type {
+pub fn Vec(comptime Elem: type, comptime n: u32) type {
+    switch (n) {
+        2, 3, 4 => {},
+        else => @compileError("only 2, 3, or 4 dimensions for vectors allowed")
+    }
+    const T = Elem;
     return switch (n) {
         2 => struct {
             x: T,
@@ -180,7 +195,6 @@ pub fn Vec(comptime T: type, comptime n: u32) type {
 }
 
 
-const std = @import("std");
 const st = std.testing;
 
 test "mixin" {
