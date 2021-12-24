@@ -2,127 +2,132 @@ const std = @import("std");
 const meta = std.meta;
 const errors = @import("errors.zig");
 
-fn Mixin(comptime Self: type, comptime Elem: type, comptime n: u3) type {
+const axis = @import("axis.zig");
+
+pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
+    comptime errors.assertValidDimensionCount(dimensions);
     return struct {
-        pub const T = Elem;
-        pub const dim = n;
+        x: T,
+        y: T,
+        z: if (dims > 2) T else void,
+        w: if (dims > 3) T else void,
+
+        const Self = @This();
+
+        pub const T = ElemType;
+        pub const dims = dimensions;
+
+        pub const Axis = axis.Axis(dims);
         
-        pub fn fill(value: T) Self {
+        pub const ElemArray = [dims]T;
+
+        pub fn init(arr: ElemArray) Self {
             var self: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                self.set(value);
+            inline for (Axis.values) |a| {
+                self.set(a, arr[@enumToInt(a)]);
             }
             return self;
         }
 
-        // It seems sharpy - xhell
-        pub fn toArrayPtr(self: *const Self) *const [dim]T
-            { return @ptrCast(*const [dim]T, &self.x); }
-        pub fn toMutArrayPtr(self: *Self) *[dim]T
-            { return @ptrCast(*[dim]T, &self.x); }
+        pub fn fill(value: T) Self {
+            var self: Self = undefined;
+            inline for (Axis.values) |a| {
+                self.set(a, value);
+            }
+            return self;
+        }
 
-        pub fn get(self: Self, i: u2) T
+        pub fn toArrayPtr(self: *const Self) *const [dims]T
+            { return @ptrCast(*const [dims]T, &self.x); }
+        pub fn toMutArrayPtr(self: *Self) *[dims]T
+            { return @ptrCast(*[dims]T, &self.x); }
+
+        pub fn get(self: Self, comptime a: Axis) T
+            { return self.toArrayPtr()[@enumToInt(a)]; }
+        pub fn set(self: *Self, comptime a: Axis, value: T) void
+            { self.toMutArrayPtr().*[@enumToInt(a)] = value; }
+        
+        pub fn geti(self: Self, i: u32) T
             { return self.toArrayPtr()[i]; }
-        pub fn set(self: *Self, i: u2, value: T) void
+        pub fn seti(self: *Self, i: u32, value: T) void
             { self.toMutArrayPtr().*[i] = value; }
 
         /// componentwise addition of two vectors
         pub fn add(lhs: Self, rhs: Self) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) + rhs.get(i));
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) + rhs.get(a));
             return res;
         }
 
         /// componentwise subtraction of two vectors
         pub fn sub(lhs: Self, rhs: Self) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) - rhs.get(i));
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) - rhs.get(a));
             return res;
         }
 
         /// componentwise multiplication of two vectors
         pub fn mul(lhs: Self, rhs: Self) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) * rhs.get(i));
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) * rhs.get(a));
             return res;
         }
 
         /// componentwise division of two vectors
         pub fn div(lhs: Self, rhs: Self) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) * rhs.get(i));
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) * rhs.get(a));
             return res;
         }
         
         /// add scalar to each component
         pub fn addScalar(lhs: Self, rhs: T) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) + rhs);
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) + rhs);
             return res;
         }
 
         /// subtract scalar from each component
         pub fn subScalar(lhs: Self, rhs: T) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) - rhs);
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) - rhs);
             return res;
         }
         /// multiply each component by scalar
         pub fn mulScalar(lhs: Self, rhs: T) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) * rhs);
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) * rhs);
             return res;
         }
 
         /// divide each component by scalar
         pub fn divScalar(lhs: Self, rhs: T) Self {
             var res: Self = undefined;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                res.set(i, lhs.get(i) / rhs);
-            }
+            inline for (Axis.values) |a|
+                res.set(a, lhs.get(a) / rhs);
             return res;
         }
 
         /// sum of components
         pub fn sum(self: Self) Self {
             var total: T = 0;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                total += self.get(i);
-            }
+            inline for (Axis.values) |a|
+                total += self.get(a);
             return total;
         }
 
         /// product of components
         pub fn product(self: Self) Self {
             var total: T = 0;
-            comptime var i = 0;
-            inline while (i < dim) : (i += 1) {
-                total *= self.get(i);
-            }
+            inline for (Axis.values) |a|
+                total *= self.get(a);
             return total;
         }
 
@@ -140,72 +145,17 @@ fn Mixin(comptime Self: type, comptime Elem: type, comptime n: u3) type {
         pub fn mag(self: Self) T {
             return std.math.sqrt(self.mag2());
         }
+        
 
-    };
-}
-
-pub fn Vec(comptime Elem: type, comptime n: u32) type {
-    switch (n) {
-        2, 3, 4 => {},
-        else => @compileError("only 2, 3, or 4 dimensions for vectors allowed")
-    }
-    const T = Elem;
-    return switch (n) {
-        2 => struct {
-            x: T,
-            y: T,
-
-            const Self = @This();
-            
-            pub fn init(x: T, y: T) Self {
-                return .{ .x = x, .y = y };
-            }
-
-            pub usingnamespace Mixin(Self, T, n);
-        },
-        3 => struct {
-            x: T,
-            y: T,
-            z: T,
-
-            const Self = @This();
-            
-            pub fn init(x: T, y: T, z: T) Self {
-                return .{ .x = x, .y = y, .z = z };
-            }
-
-            pub usingnamespace Mixin(Self, T, n);
-        },
-        4 => struct {
-            x: T,
-            y: T,
-            z: T,
-            w: T,
-
-            const Self = @This();
-            
-            pub fn init(x: T, y: T, z: T, w: T) Self {
-                return .{ .x = x, .y = y, .z = z, .w = w };
-            }
-
-            pub usingnamespace Mixin(Self, T, n);
-        },
-        else => @compileError("only 2, 3, or 4 dimensions for vectors allowed"),
     };
 }
 
 
 const st = std.testing;
 
-test "mixin" {
-    const v = Vec(u32, 3) { .x = 1, .y = 2, .z = 3 };
-    const arr = v.toArrayPtr();
-    try st.expectEqual(@as(usize, 3), arr.len);
-}
-
 test "add" {
-    const a = Vec(u32, 3).init(1, 2, 3);
-    const b = Vec(u32, 3).init(4, 5, 6);
+    const a = Vec(u32, 3).init(.{1, 2, 3});
+    const b = Vec(u32, 3).init(.{4, 5, 6});
     const c = a.add(b);
     try st.expectEqual(c.x, 5);
     try st.expectEqual(c.y, 7);
