@@ -1,8 +1,8 @@
 const std = @import("std");
-const errors = @import("errors.zig");
+const asserts = @import("asserts.zig");
 
 pub fn Axis(comptime dimensions: comptime_int) type {
-    comptime errors.assertValidDimensionCount(dimensions);
+    comptime asserts.assertValidDimensionCount(dimensions);
     return enum {
         x, y, z, w,
         const Self = @This();
@@ -13,3 +13,7 @@ pub fn Axis(comptime dimensions: comptime_int) type {
 
     };
 }
+
+pub const Axis2 = Axis(2);
+pub const Axis3 = Axis(3);
+pub const Axis4 = Axis(4);
