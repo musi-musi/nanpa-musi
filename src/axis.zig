@@ -11,6 +11,11 @@ pub fn Axis(comptime dimensions: comptime_int) type {
 
         pub const values = std.enums.values(Self)[0..dims];
 
+        /// convert to the same value in a different number of dimensions
+        pub fn cast(self: Self, comptime dest_dims: comptime_int) Axis(dest_dims) {
+            return @intToEnum(Axis(dest_dims), @enumToInt(self));
+        }
+
     };
 }
 

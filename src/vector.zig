@@ -154,7 +154,7 @@ pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
             comptime asserts.assertFloat(Elem);
             comptime asserts.assertInt(T);
             var res: Vec(T, dims) = undefined;
-            inline for (Axis) |a| {
+            inline for (Axis.values) |a| {
                 res.set(a, @floatToInt(T, self.get(a)));
             }
             return res;
@@ -165,7 +165,7 @@ pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
             comptime asserts.assertInt(Elem);
             comptime asserts.assertFloat(T);
             var res: Vec(T, dims) = undefined;
-            inline for (Axis) |a| {
+            inline for (Axis.values) |a| {
                 res.set(a, @intToFloat(T, self.get(a)));
             }
             return res;
@@ -176,7 +176,7 @@ pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
             comptime asserts.assertFloat(Elem);
             comptime asserts.assertFloat(T);
             var res: Vec(T, dims) = undefined;
-            inline for (Axis) |a| {
+            inline for (Axis.values) |a| {
                 res.set(a, @floatCast(T, self.get(a)));
             }
             return res;
@@ -187,7 +187,7 @@ pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
             comptime asserts.assertInt(Elem);
             comptime asserts.assertInt(T);
             var res: Vec(T, dims) = undefined;
-            inline for (Axis) |a| {
+            inline for (Axis.values) |a| {
                 res.set(a, @intCast(T, self.get(a)));
             }
             return res;
@@ -198,9 +198,20 @@ pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
             comptime asserts.assertInt(Elem);
             comptime asserts.assertInt(T);
             var res: Vec(T, dims) = undefined;
-            inline for (Axis) |a| {
+            inline for (Axis.values) |a| {
                 res.set(a, @truncate(T, self.get(a)));
             }
+            return res;
+        }
+
+        /// add an extra component and initialize it with `new_elem`
+        pub fn append(self: Self, new_elem: Elem) Vec(Elem, dims + 1) {
+            const RVec = Vec(Elem, dims + 1);
+            var res: RVec = undefined;
+            inline for (Axis.values) |a| {
+                res.set(a.cast(dims + 1), self.get(a));
+            }
+            res.set(RVec.Axis.values[RVec.dims - 1], new_elem);
             return res;
         }
 
