@@ -20,6 +20,9 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
 
         const Self = @This();
 
+        pub const zero = fill(0);
+        pub const one = fill(1);
+
         pub fn init(v: Value) Self {
             return .{ .v = v};
         }
