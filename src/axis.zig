@@ -1,21 +1,37 @@
 const std = @import("std");
 const asserts = @import("asserts.zig");
 
+fn Mixin(comptime Self: type, comptime dimensions_: comptime_int) type {
+    return struct {
+
+        pub const dimensions = dimensions_;
+        pub const values = std.enums.values(Self);
+
+    };
+}
+
 pub fn Axis(comptime dimensions: comptime_int) type {
     comptime asserts.assertValidDimensionCount(dimensions);
-    return enum {
-        x, y, z, w,
-        const Self = @This();
-
-        pub const dims = dimensions;
-
-        pub const values = std.enums.values(Self)[0..dims];
-
-        /// convert to the same value in a different number of dimensions
-        pub fn cast(self: Self, comptime dest_dims: comptime_int) Axis(dest_dims) {
-            return @intToEnum(Axis(dest_dims), @enumToInt(self));
-        }
-
+    return switch (dimensions) {
+        2 => enum {
+            x, y,
+            const Self = @This();
+            const mixin = Mixin(Self, dimensions);
+            pub usingnamespace mixin;
+        },
+        3 => enum {
+            x, y, z,
+            const Self = @This();
+            const mixin = Mixin(Self, dimensions);
+            pub usingnamespace mixin;
+        },
+        4 => enum {
+            x, y, z, w,
+            const Self = @This();
+            const mixin = Mixin(Self, dimensions);
+            pub usingnamespace mixin;
+        },
+        else => unreachable,
     };
 }
 

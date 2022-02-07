@@ -1,259 +1,209 @@
 const std = @import("std");
-const meta = std.meta;
 const asserts = @import("asserts.zig");
-
 const axis = @import("axis.zig");
 
-pub fn Vec(comptime ElemType: type, comptime dimensions: u32) type {
-    comptime asserts.assertValidDimensionCount(dimensions);
-    comptime asserts.assertFloatOrInt(ElemType);
-    return struct {
-        x: Elem,
-        y: Elem,
-        z: if (dims > 2) Elem else void,
-        w: if (dims > 3) Elem else void,
+pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
+    comptime asserts.assertFloatOrInt(Scalar_);
+    comptime asserts.assertValidDimensionCount(dimensions_);
+    return extern struct {
+        
+        v: Value,
+
+        pub const Value = [dimensions]Scalar;
+        pub const Scalar = Scalar_;
+        pub const dimensions = dimensions_;
+
+        pub const Axis = axis.Axis(dimensions);
+
+        pub const axes = Axis.values;
+        pub const indices = ([4]u32{0, 1, 2, 3})[0..dimensions];
 
         const Self = @This();
 
-        pub const Elem = ElemType;
-        pub const dims = dimensions;
+        pub fn init(v: Value) Self {
+            return .{ .v = v};
+        }
 
-        pub const Axis = axis.Axis(dims);
-        
-        pub const ElemArray = [dims]Elem;
+        pub fn get(self: Self, comptime a: Axis) Scalar {
+            return self.v[@enumToInt(a)];
+        }
+        pub fn set(self: *Self, comptime a: Axis, v: Scalar) void {
+            self.v[@enumToInt(a)] = v;
+        }
+        pub fn ptr(self: *const Self, comptime a: Axis) *const Scalar {
+            return &(self.v[@enumToInt(a)]);
+        }
+        pub fn ptrMut(self: *Self, comptime a: Axis) *Scalar {
+            return &(self.v[@enumToInt(a)]);
+        }
 
-        pub fn init(arr: ElemArray) Self {
-            var self: Self = undefined;
-            inline for (Axis.values) |a| {
-                self.set(a, arr[@enumToInt(a)]);
+        pub fn fill(v: Scalar) Self {
+            var res: Self = undefined;
+            inline for(indices) |i| {
+                res.v[i] = v;
             }
-            return self;
+            return res;
         }
 
-        pub fn fill(value: Elem) Self {
-            var self: Self = undefined;
-            inline for (Axis.values) |a| {
-                self.set(a, value);
+        pub fn unit(comptime a: Axis) Self {
+            comptime {
+                var res = fill(0);
+                res.set(a, 1);
+                return res;
             }
-            return self;
         }
 
-        pub fn toArrayPtr(self: *const Self) *const [dims]Elem
-            { return @ptrCast(*const [dims]Elem, &self.x); }
-        pub fn toMutArrayPtr(self: *Self) *[dims]Elem
-            { return @ptrCast(*[dims]Elem, &self.x); }
-
-        pub fn get(self: Self, comptime a: Axis) Elem
-            { return self.toArrayPtr()[@enumToInt(a)]; }
-        pub fn set(self: *Self, comptime a: Axis, value: Elem) void
-            { self.toMutArrayPtr().*[@enumToInt(a)] = value; }
-        
-        pub fn geti(self: Self, i: u32) Elem
-            { return self.toArrayPtr()[i]; }
-        pub fn seti(self: *Self, i: u32, value: Elem) void
-            { self.toMutArrayPtr().*[i] = value; }
-
-        /// componentwise addition of two vectors
-        pub fn add(lhs: Self, rhs: Self) Self {
+        /// unary negation
+        pub fn neg(self: Self) Self {
             var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) + rhs.get(a));
+            inline for (indices) |i| {
+                res.v[i] = -self.v[i];
+            }
             return res;
         }
 
-        /// componentwise subtraction of two vectors
-        pub fn sub(lhs: Self, rhs: Self) Self {
+        /// component-wise addition
+        pub fn add(a: Self, b: Self) Self {
             var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) - rhs.get(a));
+            inline for (indices) |i| {
+                res.v[i] = a.v[i] + b.v[i];
+            }
             return res;
         }
 
-        /// componentwise multiplication of two vectors
-        pub fn mul(lhs: Self, rhs: Self) Self {
+        /// component-wise subtraction
+        pub fn sub(a: Self, b: Self) Self {
             var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) * rhs.get(a));
+            inline for (indices) |i| {
+                res.v[i] = a.v[i] - b.v[i];
+            }
             return res;
         }
 
-        /// componentwise division of two vectors
-        pub fn div(lhs: Self, rhs: Self) Self {
+        /// component-wise multiplication
+        pub fn mul(a: Self, b: Self) Self {
             var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) * rhs.get(a));
-            return res;
-        }
-        
-        /// add scalar to each component
-        pub fn addScalar(lhs: Self, rhs: Elem) Self {
-            var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) + rhs);
+            inline for (indices) |i| {
+                res.v[i] = a.v[i] * b.v[i];
+            }
             return res;
         }
 
-        /// subtract scalar from each component
-        pub fn subScalar(lhs: Self, rhs: Elem) Self {
+        /// component-wise division
+        pub fn div(a: Self, b: Self) Self {
             var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) - rhs);
-            return res;
-        }
-        /// multiply each component by scalar
-        pub fn mulScalar(lhs: Self, rhs: Elem) Self {
-            var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) * rhs);
+            inline for (indices) |i| {
+                res.v[i] = a.v[i] / b.v[i];
+            }
             return res;
         }
 
-        /// divide each component by scalar
-        pub fn divScalar(lhs: Self, rhs: Elem) Self {
+        /// scalar multiplication
+        pub fn mulScalar(a: Self, b: Scalar) Self {
             var res: Self = undefined;
-            inline for (Axis.values) |a|
-                res.set(a, lhs.get(a) / rhs);
+            inline for (indices) |i| {
+                res.v[i] = a.v[i] * b;
+            }
+            return res;
+        }
+
+        /// scalar division
+        pub fn divScalar(a: Self, b: Scalar) Self {
+            var res: Self = undefined;
+            inline for (indices) |i| {
+                res.v[i] = a.v[i] / b;
+            }
             return res;
         }
 
         /// sum of components
         pub fn sum(self: Self) Self {
-            var total: Elem = 0;
-            inline for (Axis.values) |a|
-                total += self.get(a);
-            return total;
+            var res: Scalar = 0;
+            inline for (indices) |i| {
+                res += self.v[i];
+            }
+            return res;
         }
 
         /// product of components
         pub fn product(self: Self) Self {
-            var total: Elem = 0;
-            inline for (Axis.values) |a|
-                total *= self.get(a);
-            return total;
+            var res: Scalar = 0;
+            inline for (indices) |i| {
+                res *= self.v[i];
+            }
+            return res;
         }
 
         /// dot product
-        pub fn dot(lhs: Self, rhs: Self) Elem {
-            return lhs.mul(rhs).sum();
+        pub fn dot(a: Self, b: Self) Scalar {
+            return a.mul(b).sum();
         }
 
         /// square magnitude
-        pub fn mag2(self: Self) Elem {
+        pub fn mag2(self: Self) Scalar {
             return self.dot(self);
         }
 
         /// magnitude
-        pub fn mag(self: Self) Elem {
+        pub fn mag(self: Self) Scalar {
             return std.math.sqrt(self.mag2());
-        }
-
-        // casts
-
-        /// cast a float vector to an int vector with element type of `T`
-        pub fn floatToInt(self: Self, comptime T: type) Vec(T, dims) {
-            comptime asserts.assertFloat(Elem);
-            comptime asserts.assertInt(T);
-            var res: Vec(T, dims) = undefined;
-            inline for (Axis.values) |a| {
-                res.set(a, @floatToInt(T, self.get(a)));
-            }
-            return res;
-        }
-
-        /// cast an int vector to a float vector with element type of `T`
-        pub fn intToFloat(self: Self, comptime T: type) Vec(T, dims) {
-            comptime asserts.assertInt(Elem);
-            comptime asserts.assertFloat(T);
-            var res: Vec(T, dims) = undefined;
-            inline for (Axis.values) |a| {
-                res.set(a, @intToFloat(T, self.get(a)));
-            }
-            return res;
-        }
-
-        /// cast a float vector to a different float vector with element type of `T`
-        pub fn floatCast(self: Self, comptime T: type) Vec(T, dims) {
-            comptime asserts.assertFloat(Elem);
-            comptime asserts.assertFloat(T);
-            var res: Vec(T, dims) = undefined;
-            inline for (Axis.values) |a| {
-                res.set(a, @floatCast(T, self.get(a)));
-            }
-            return res;
-        }
-
-        /// cast an int vector to a different int vector with element type of `T`
-        pub fn intCast(self: Self, comptime T: type) Vec(T, dims) {
-            comptime asserts.assertInt(Elem);
-            comptime asserts.assertInt(T);
-            var res: Vec(T, dims) = undefined;
-            inline for (Axis.values) |a| {
-                res.set(a, @intCast(T, self.get(a)));
-            }
-            return res;
-        }
-
-        /// truncate the components of an int vector to a different int vector with element type of `T`
-        pub fn truncate(self: Self, comptime T: type) Vec(T, dims) {
-            comptime asserts.assertInt(Elem);
-            comptime asserts.assertInt(T);
-            var res: Vec(T, dims) = undefined;
-            inline for (Axis.values) |a| {
-                res.set(a, @truncate(T, self.get(a)));
-            }
-            return res;
-        }
-
-        /// add an extra component and initialize it with `new_elem`
-        pub fn append(self: Self, new_elem: Elem) Vec(Elem, dims + 1) {
-            const RVec = Vec(Elem, dims + 1);
-            var res: RVec = undefined;
-            inline for (Axis.values) |a| {
-                res.set(a.cast(dims + 1), self.get(a));
-            }
-            res.set(RVec.Axis.values[RVec.dims - 1], new_elem);
-            return res;
         }
 
     };
 }
 
+pub const Vec2 = Vector(f32, 2);
+pub const Vec3 = Vector(f32, 3);
+pub const Vec4 = Vector(f32, 4);
 
-/// 2d vector of f32
-pub const Vec2 = Vec(f32, 2);
-/// 3d vector of f32
-pub const Vec3 = Vec(f32, 3);
-/// 4d vector of f32
-pub const Vec4 = Vec(f32, 4);
+pub fn vec2(v: Vec2.Value) Vec2 {
+    return Vec2.init(v);
+}
+pub fn vec3(v: Vec3.Value) Vec3 {
+    return Vec3.init(v);
+}
+pub fn vec4(v: Vec4.Value) Vec4 {
+    return Vec4.init(v);
+}
 
-/// 2d vector of f64
-pub const Vec2d = Vec(f64, 2);
-/// 3d vector of f64
-pub const Vec3d = Vec(f64, 3);
-/// 4d vector of f64
-pub const Vec4d = Vec(f64, 4);
+pub const Vec2d = Vector(f64, 2);
+pub const Vec3d = Vector(f64, 3);
+pub const Vec4d = Vector(f64, 4);
 
-/// 2d vector of i32
-pub const Vec2i = Vec(i32, 2);
-/// 3d vector of i32
-pub const Vec3i = Vec(i32, 3);
-/// 4d vector of i32
-pub const Vec4i = Vec(i32, 4);
+pub fn vec2d(v: Vec2d.Value) Vec2d {
+    return Vec2d.init(v);
+}
+pub fn vec3d(v: Vec3d.Value) Vec3d {
+    return Vec3d.init(v);
+}
+pub fn vec4d(v: Vec4d.Value) Vec4d {
+    return Vec4d.init(v);
+}
 
-/// 2d vector of u32
-pub const Vec2u = Vec(u32, 2);
-/// 3d vector of u32
-pub const Vec3u = Vec(u32, 3);
-/// 4d vector of u32
-pub const Vec4u = Vec(u32, 4);
+pub const Vec2i = Vector(i32, 2);
+pub const Vec3i = Vector(i32, 3);
+pub const Vec4i = Vector(i32, 4);
 
-const st = std.testing;
+pub fn vec2i(v: Vec2i.Value) Vec2i {
+    return Vec2i.init(v);
+}
+pub fn vec3i(v: Vec3i.Value) Vec3i {
+    return Vec3i.init(v);
+}
+pub fn vec4i(v: Vec4i.Value) Vec4i {
+    return Vec4i.init(v);
+}
 
-test "add" {
-    const a = Vec3u.init(.{1, 2, 3});
-    const b = Vec3u.init(.{4, 5, 6});
-    const c = a.add(b);
-    try st.expectEqual(c.x, 5);
-    try st.expectEqual(c.y, 7);
-    try st.expectEqual(c.z, 9);
+pub const Vec2u = Vector(u32, 2);
+pub const Vec3u = Vector(u32, 3);
+pub const Vec4u = Vector(u32, 4);
+
+pub fn vec2u(v: Vec2u.Value) Vec2u {
+    return Vec2u.init(v);
+}
+pub fn vec3u(v: Vec3u.Value) Vec3u {
+    return Vec3u.init(v);
+}
+pub fn vec4u(v: Vec4u.Value) Vec4u {
+    return Vec4u.init(v);
 }
