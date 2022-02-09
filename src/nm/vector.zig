@@ -40,6 +40,28 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
             return &(self.v[@enumToInt(a)]);
         }
 
+        /// lower this vector by one dimension, discarding last component
+        pub fn removeDimension(self: Self) Vector(Scalar, dimensions - 1) {
+            return Vector(Scalar, dimensions - 1).init(self.v[0..(dimensions - 1)]);
+        }
+        
+        /// raise this vector by one dimension, appending v as the value for the last component
+        pub fn addDimension(self: Self, v: Scalar) Vector(Scalar, dimensions + 1) {
+            const Target = Vector(Scalar, dimensions + 1);
+            var res: Target = undefined;
+            inline for(indices) |i| {
+                res.v[i] = self.v[i];
+            }
+            res.v[dimensions] = v;
+        }
+
+        pub fn toAffinePosition(self: Self) Vector(Scalar, dimensions + 1) {
+            return self.addDimension(1);
+        }
+        pub fn toAffineDirection(self: Self) Vector(Scalar, dimensions + 1) {
+            return self.addDimension(0);
+        }
+
         pub fn fill(v: Scalar) Self {
             var res: Self = undefined;
             inline for(indices) |i| {
@@ -150,6 +172,22 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
         /// magnitude
         pub fn mag(self: Self) Scalar {
             return std.math.sqrt(self.mag2());
+        }
+
+        /// normalized
+        pub fn norm(self: Self) Scalar {
+            return self.divScalar(self.mag);
+        }
+
+        /// cross product
+        /// using with non-3d vectors is a compile error
+        pub fn cross(a: Self, b: Self) Self {
+            if (dimensions != 3) @compileError("cannot compute cross product of non 3d vectors");
+            var res: Self = undefined;
+            res.v[0] = a.v[1] * b.v[2] - a.v[2] * b.v[1];
+            res.v[1] = a.v[2] * b.v[0] - a.v[0] * b.v[2];
+            res.v[2] = a.v[0] * b.v[1] - a.v[1] * b.v[0];
+            return res;
         }
 
     };
