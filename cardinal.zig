@@ -64,7 +64,7 @@ fn Mixin(comptime Self: type, comptime dimensions_: comptime_int) type {
             return @intToEnum(Sign, @truncate(u1, @enumToInt(self) % 2));
         }
 
-        pub fn negate(self: Self) Self {
+        pub fn neg(self: Self) Self {
             return @intToEnum(Self, @enumToInt(self) ^ 1);
         }
 

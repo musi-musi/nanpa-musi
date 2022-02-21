@@ -5,6 +5,7 @@ const matrix = @import("matrix.zig");
 
 pub usingnamespace vector;
 pub usingnamespace axis;
+pub usingnamespace cardinal;
 pub usingnamespace matrix;
 
 pub usingnamespace  @import("transform.zig");

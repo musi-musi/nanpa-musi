@@ -136,6 +136,15 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
             }
         }
 
+        pub fn unitSigned(comptime c: Cardinal) Self {
+            comptime {
+                return switch (c.sign()) {
+                    .positive => unit(c.axis()),
+                    .negative => unit(c.axis()).neg(),
+                };
+            }
+        }
+
         /// unary negation
         pub fn neg(self: Self) Self {
             var res: Self = undefined;
@@ -200,7 +209,7 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
         }
 
         /// sum of components
-        pub fn sum(self: Self) Self {
+        pub fn sum(self: Self) Scalar {
             var res: Scalar = 0;
             inline for (indices) |i| {
                 res += self.v[i];
@@ -209,7 +218,7 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
         }
 
         /// product of components
-        pub fn product(self: Self) Self {
+        pub fn product(self: Self) Scalar {
             var res: Scalar = 0;
             inline for (indices) |i| {
                 res *= self.v[i];
@@ -233,8 +242,8 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
         }
 
         /// normalized
-        pub fn norm(self: Self) Scalar {
-            return self.divScalar(self.mag);
+        pub fn norm(self: Self) Self {
+            return self.divScalar(self.mag());
         }
 
         /// cross product
