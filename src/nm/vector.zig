@@ -1,6 +1,63 @@
 const std = @import("std");
 const asserts = @import("asserts.zig");
 const axis = @import("axis.zig");
+const cardinal = @import("cardinal.zig");
+
+pub const Vec2 = Vector(f32, 2);
+pub const Vec3 = Vector(f32, 3);
+pub const Vec4 = Vector(f32, 4);
+
+pub fn vec2(v: Vec2.Value) Vec2 {
+    return Vec2.init(v);
+}
+pub fn vec3(v: Vec3.Value) Vec3 {
+    return Vec3.init(v);
+}
+pub fn vec4(v: Vec4.Value) Vec4 {
+    return Vec4.init(v);
+}
+
+pub const Vec2d = Vector(f64, 2);
+pub const Vec3d = Vector(f64, 3);
+pub const Vec4d = Vector(f64, 4);
+
+pub fn vec2d(v: Vec2d.Value) Vec2d {
+    return Vec2d.init(v);
+}
+pub fn vec3d(v: Vec3d.Value) Vec3d {
+    return Vec3d.init(v);
+}
+pub fn vec4d(v: Vec4d.Value) Vec4d {
+    return Vec4d.init(v);
+}
+
+pub const Vec2i = Vector(i32, 2);
+pub const Vec3i = Vector(i32, 3);
+pub const Vec4i = Vector(i32, 4);
+
+pub fn vec2i(v: Vec2i.Value) Vec2i {
+    return Vec2i.init(v);
+}
+pub fn vec3i(v: Vec3i.Value) Vec3i {
+    return Vec3i.init(v);
+}
+pub fn vec4i(v: Vec4i.Value) Vec4i {
+    return Vec4i.init(v);
+}
+
+pub const Vec2u = Vector(u32, 2);
+pub const Vec3u = Vector(u32, 3);
+pub const Vec4u = Vector(u32, 4);
+
+pub fn vec2u(v: Vec2u.Value) Vec2u {
+    return Vec2u.init(v);
+}
+pub fn vec3u(v: Vec3u.Value) Vec3u {
+    return Vec3u.init(v);
+}
+pub fn vec4u(v: Vec4u.Value) Vec4u {
+    return Vec4u.init(v);
+}
 
 pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
     comptime asserts.assertFloatOrInt(Scalar_);
@@ -14,6 +71,7 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
         pub const dimensions = dimensions_;
 
         pub const Axis = axis.Axis(dimensions);
+        pub const Cardinal = cardinal.Cardinal(dimensions);
 
         pub const axes = Axis.values;
         pub const indices = ([4]u32{0, 1, 2, 3})[0..dimensions];
@@ -191,60 +249,4 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
         }
 
     };
-}
-
-pub const Vec2 = Vector(f32, 2);
-pub const Vec3 = Vector(f32, 3);
-pub const Vec4 = Vector(f32, 4);
-
-pub fn vec2(v: Vec2.Value) Vec2 {
-    return Vec2.init(v);
-}
-pub fn vec3(v: Vec3.Value) Vec3 {
-    return Vec3.init(v);
-}
-pub fn vec4(v: Vec4.Value) Vec4 {
-    return Vec4.init(v);
-}
-
-pub const Vec2d = Vector(f64, 2);
-pub const Vec3d = Vector(f64, 3);
-pub const Vec4d = Vector(f64, 4);
-
-pub fn vec2d(v: Vec2d.Value) Vec2d {
-    return Vec2d.init(v);
-}
-pub fn vec3d(v: Vec3d.Value) Vec3d {
-    return Vec3d.init(v);
-}
-pub fn vec4d(v: Vec4d.Value) Vec4d {
-    return Vec4d.init(v);
-}
-
-pub const Vec2i = Vector(i32, 2);
-pub const Vec3i = Vector(i32, 3);
-pub const Vec4i = Vector(i32, 4);
-
-pub fn vec2i(v: Vec2i.Value) Vec2i {
-    return Vec2i.init(v);
-}
-pub fn vec3i(v: Vec3i.Value) Vec3i {
-    return Vec3i.init(v);
-}
-pub fn vec4i(v: Vec4i.Value) Vec4i {
-    return Vec4i.init(v);
-}
-
-pub const Vec2u = Vector(u32, 2);
-pub const Vec3u = Vector(u32, 3);
-pub const Vec4u = Vector(u32, 4);
-
-pub fn vec2u(v: Vec2u.Value) Vec2u {
-    return Vec2u.init(v);
-}
-pub fn vec3u(v: Vec3u.Value) Vec3u {
-    return Vec3u.init(v);
-}
-pub fn vec4u(v: Vec4u.Value) Vec4u {
-    return Vec4u.init(v);
 }

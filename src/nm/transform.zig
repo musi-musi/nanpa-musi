@@ -48,6 +48,20 @@ fn transformGeneric(comptime Scalar: type) type {
             return result;
         }
 
+        /// creates an orthogonal projection matrix.
+        /// `left`, `right`, `bottom` and `top` are the borders of the screen whereas `near` and `far` define the
+        /// distance of the near and far clipping planes.
+        pub fn createOrthogonal(left: Scalar, right: Scalar, bottom: Scalar, top: Scalar, near: Scalar, far: Scalar) Mat4 {
+            var result = Mat4.identity;
+            result.v[0][0] = 2 / (right - left);
+            result.v[1][1] = 2 / (top - bottom);
+            result.v[2][2] = 1 / (far - near);
+            result.v[3][0] = -(right + left) / (right - left);
+            result.v[3][1] = -(top + bottom) / (top - bottom);
+            result.v[3][2] = -near / (far - near);
+            return result;
+        }
+
     };
 }
 
