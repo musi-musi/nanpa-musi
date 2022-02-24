@@ -52,7 +52,7 @@ fn transformGeneric(comptime Scalar: type) type {
             });
         }
 
-        pub fn createEulerZXY(euler: Vec3) Self {
+        pub fn createEulerZXY(euler: Vec3) Mat4 {
             const x = euler.get(.x);
             const y = euler.get(.y);
             const z = euler.get(.z);

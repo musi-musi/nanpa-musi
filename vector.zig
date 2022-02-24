@@ -100,7 +100,7 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
 
         /// lower this vector by one dimension, discarding last component
         pub fn removeDimension(self: Self) Vector(Scalar, dimensions - 1) {
-            return Vector(Scalar, dimensions - 1).init(self.v[0..(dimensions - 1)]);
+            return Vector(Scalar, dimensions - 1).init(self.v[0..(dimensions - 1)].*);
         }
         
         /// raise this vector by one dimension, appending v as the value for the last component
@@ -111,6 +111,7 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
                 res.v[i] = self.v[i];
             }
             res.v[dimensions] = v;
+            return res;
         }
 
         pub fn toAffinePosition(self: Self) Vector(Scalar, dimensions + 1) {

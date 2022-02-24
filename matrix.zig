@@ -55,13 +55,24 @@ pub fn Matrix(comptime Scalar_: type, comptime rows_: comptime_int, comptime col
             return res;
         }
 
+        /// the vector with one less dimension
+        pub const ShortVector = vector.Vector(Scalar, rows - 1);
+
+        pub fn transformDirection(self: Self, vec: ShortVector) ShortVector {
+            return self.transform(vec.addDimension(0)).removeDimension();
+        }
+        
+        pub fn transformPosition(self: Self, vec: ShortVector) ShortVector {
+            return self.transform(vec.addDimension(1)).removeDimension();
+        }
+
         pub fn mul(ma: Self, mb: Self) Self {
             // TODO: support non-square mats
             var res: Self = undefined;
-            inline for (rows) |r| {
-                inline for (cols) |c| {
+            inline for (row_indices) |r| {
+                inline for (col_indices) |c| {
                     var sum: Scalar = 0;
-                    inline for (rows) |i| {
+                    inline for (row_indices) |i| {
                         sum += ma.v[r][i] * mb.v[i][c];
                     }
                     res.v[r][c] = sum;
@@ -72,8 +83,8 @@ pub fn Matrix(comptime Scalar_: type, comptime rows_: comptime_int, comptime col
 
         pub fn transpose(self: Self) Self {
             var res: Self = undefined;
-            inline for (rows) |r| {
-                inline for (cols) |c| {
+            inline for (row_indices) |r| {
+                inline for (col_indices) |c| {
                     res.v[r][c] = self.v[c][r];
                 }
             }
@@ -140,7 +151,7 @@ pub fn Matrix(comptime Scalar_: type, comptime rows_: comptime_int, comptime col
                 (a31 * b01 - a30 * b03 - a32 * b00) * det, // 14
                 (a20 * b03 - a21 * b01 + a22 * b00) * det, // 15
             };
-            return (@bitCast([4][4]Scalar, result));
+            return init(@bitCast([4][4]Scalar, result));
         }
 
 
