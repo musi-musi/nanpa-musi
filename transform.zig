@@ -13,6 +13,65 @@ fn transformGeneric(comptime Scalar: type) type {
         pub const Vec4 = vector.Vector(Scalar, 4);
         pub const Mat4 = matrix.Matrix(Scalar, 4, 4);
 
+        pub fn createTranslate(translate: Vec3) Mat4 {
+            const x = translate.get(.x);
+            const y = translate.get(.y);
+            const z = translate.get(.z);
+            return Mat4.init(.{
+                .{ 1, 0, 0, 0 },
+                .{ 0, 1, 0, 0 },
+                .{ 0, 0, 1, 0 },
+                .{ x, y, z, 1 },
+            });
+        }
+
+        pub fn createScale(scale: Vec3) Mat4 {
+            const x = scale.get(.x);
+            const y = scale.get(.y);
+            const z = scale.get(.z);
+            return Mat4.init(.{
+                .{ x, 0, 0, 0 },
+                .{ 0, y, 0, 0 },
+                .{ 0, 0, z, 0 },
+                .{ 0, 0, 0, 1 },
+            });
+        }
+
+        pub fn createAxisAngle(axis: Vec3, angle: Scalar) Mat4 {
+            const x = axis.get(.x);
+            const y = axis.get(.y);
+            const z = axis.get(.z);
+            const cos = std.math.cos(angle);
+            const sin = std.math.sin(angle);
+
+            return Mat4.init(.{
+                .{ cos + x * x * (1 - cos), x * y * (1 - cos) - z * sin, x * z * (1 - cos) + y * sin, 0 },
+                .{ y * x * (1 - cos) + z * sin, cos + y * y * (1 - cos), y * z * (1 - cos) - x * sin, 0 },
+                .{ z * x * (1 * cos) - y * sin, z * y * (1 - cos) + x * sin, cos + z * z * (1 - cos), 0 },
+                .{ 0, 0, 0, 1 },
+            });
+        }
+
+        pub fn createEulerZXY(euler: Vec3) Self {
+            const x = euler.get(.x);
+            const y = euler.get(.y);
+            const z = euler.get(.z);
+            const sin = std.math.sin;
+            const cos = std.math.cos;
+            const c1 = cos(z);
+            const s1 = sin(z);
+            const c2 = cos(x);
+            const s2 = sin(x);
+            const c3 = cos(y);
+            const s3 = sin(y);
+            return Mat4.init(.{
+                .{c1*c3 - s1*s2*s3, -c2*s1, c1*s3 + c3*s1*s2, 0},
+                .{c3*s1 + c1*s2*s3, c1*c2, s1*s3 - c1*c3*s2, 0},
+                .{-c2*s3, s2, c2*c3, 0},
+                .{ 0, 0, 0, 1 }
+            }).transpose();
+        }
+
         pub fn createLook(eye: Vec3, direction: Vec3, up: Vec3) Mat4 {
             const f = direction.norm();
             const s = up.cross(f).norm();
