@@ -98,6 +98,26 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
             return &(self.v[@enumToInt(a)]);
         }
 
+        pub fn cast(self: Self, comptime S: type) Vector(S, dimensions) {
+            var result: Vector(S, dimensions) = undefined;
+            inline for(indices) |i| {
+                switch (@typeInfo(Scalar)) {
+                    .Float => switch (@typeInfo(S)) {
+                        .Float => result.v[i] = @floatCast(S, self.v[i]),
+                        .Int => result.v[i] = @floatToInt(S, self.v[i]),
+                        else => unreachable,
+                    },
+                    .Int => switch (@typeInfo(S)) {
+                        .Float => result.v[i] = @intToFloat(S, self.v[i]),
+                        .Int => result.v[i] = @intCast(S, self.v[i]),
+                        else => unreachable,
+                    },
+                    else => unreachable,
+                }
+            }
+            return result;
+        }
+
         /// lower this vector by one dimension, discarding last component
         pub fn removeDimension(self: Self) Vector(Scalar, dimensions - 1) {
             return Vector(Scalar, dimensions - 1).init(self.v[0..(dimensions - 1)].*);

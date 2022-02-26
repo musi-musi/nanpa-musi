@@ -9,6 +9,14 @@ pub const Cardinal4 = Cardinal(4);
 pub fn Cardinal(comptime dimensions_: comptime_int) type {
     comptime asserts.assertValidDimensionCount(dimensions_);
     return switch (dimensions_) {
+        1 => enum {
+            x_pos,
+            x_neg,
+
+            const Self = @This();
+            const mixin = Mixin(Self, dimensions_);
+            pub usingnamespace mixin;
+        },
         2 => enum {
             x_pos,
             x_neg,

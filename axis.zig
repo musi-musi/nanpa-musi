@@ -13,6 +13,12 @@ fn Mixin(comptime Self: type, comptime dimensions_: comptime_int) type {
 pub fn Axis(comptime dimensions: comptime_int) type {
     comptime asserts.assertValidDimensionCount(dimensions);
     return switch (dimensions) {
+        1 => enum {
+            x, y,
+            const Self = @This();
+            const mixin = Mixin(Self, dimensions);
+            pub usingnamespace mixin;
+        },
         2 => enum {
             x, y,
             const Self = @This();

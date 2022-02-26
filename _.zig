@@ -8,4 +8,6 @@ pub usingnamespace axis;
 pub usingnamespace cardinal;
 pub usingnamespace matrix;
 
-pub usingnamespace  @import("transform.zig");
+pub usingnamespace @import("transform.zig");
+
+pub const noise = @import("noise/_.zig");
