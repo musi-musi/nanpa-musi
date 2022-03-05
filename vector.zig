@@ -166,6 +166,15 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
             }
         }
 
+        pub fn eql(a: Self, b: Self) bool {
+            inline for (indices) |i| {
+                if (a.v[i] != b.v[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         /// unary negation
         pub fn neg(self: Self) Self {
             var res: Self = undefined;
