@@ -184,6 +184,15 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
             return res;
         }
 
+        /// component-wise floor
+        pub fn floor(self: Self) Self {
+            var res: Self = undefined;
+            inline for (indices) |i| {
+                res.v[i] = std.math.floor(self.v[i]);
+            }
+            return res;
+        }
+
         /// component-wise addition
         pub fn add(a: Self, b: Self) Self {
             var res: Self = undefined;

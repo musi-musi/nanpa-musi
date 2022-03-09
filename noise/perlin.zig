@@ -51,7 +51,7 @@ pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32) type {
         pub fn sample(self: Self, value: Vector.Value) Scalar {
             _ = self;
             var v = Vector.init(value);
-            const min: IVector = v.cast(isize);
+            const min: IVector = v.floor().cast(isize);
             const max = min.add(IVector.fill(1));
             const a = min.v;
             const b = max.v;
