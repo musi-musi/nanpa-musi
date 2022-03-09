@@ -287,5 +287,18 @@ pub fn Vector(comptime Scalar_: type, comptime dimensions_: comptime_int) type {
             return res;
         }
 
+
+        pub fn format(self: Self, comptime fmt: []const u8, _: std.fmt.FormatOptions, w: anytype) !void {
+            try w.writeAll("(");
+            inline for (indices) |i| {
+                if (i != 0) {
+                    try w.writeAll(", ");
+                }
+                try w.print("{" ++ fmt ++ "}", .{ self.v[i] });
+            }
+            try w.writeAll(")");
+        }
+
+
     };
 }
