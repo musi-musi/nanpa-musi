@@ -2,16 +2,16 @@ const std = @import("std");
 const vector = @import("../vector.zig");
 const asserts = @import("../asserts.zig");
 
-pub const Perlin1 = Perlin(f32, 1);
-pub const Perlin2 = Perlin(f32, 2);
-pub const Perlin3 = Perlin(f32, 3);
-pub const Perlin4 = Perlin(f32, 4);
-pub const Perlin1d = Perlin(f64, 1);
-pub const Perlin2d = Perlin(f64, 2);
-pub const Perlin3d = Perlin(f64, 3);
-pub const Perlin4d = Perlin(f64, 4);
+pub fn Perlin1(comptime wrap: ?usize) type { return Perlin(f32, 1, wrap); }
+pub fn Perlin2(comptime wrap: ?usize) type { return Perlin(f32, 2, wrap); }
+pub fn Perlin3(comptime wrap: ?usize) type { return Perlin(f32, 3, wrap); }
+pub fn Perlin4(comptime wrap: ?usize) type { return Perlin(f32, 4, wrap); }
+pub fn Perlin1d(comptime wrap: ?usize) type { return Perlin(f64, 1, wrap); }
+pub fn Perlin2d(comptime wrap: ?usize) type { return Perlin(f64, 2, wrap); }
+pub fn Perlin3d(comptime wrap: ?usize) type { return Perlin(f64, 3, wrap); }
+pub fn Perlin4d(comptime wrap: ?usize) type { return Perlin(f64, 4, wrap); }
 
-pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32) type {
+pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32, comptime wrap_: ?usize) type {
     return struct {
 
         pub const Scalar = Scalar_;
@@ -19,6 +19,9 @@ pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32) type {
 
         pub const Vector = vector.Vector(Scalar, dimensions);
         pub const IVector = vector.Vector(isize, dimensions);
+        
+        const wrap = wrap_;
+
 
         const Self = @This();
 
@@ -48,13 +51,26 @@ pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32) type {
             break: blk result;
         };
 
+        fn mod(position: IVector) IVector {
+            if (wrap) |w| {
+                var result: IVector = undefined;
+                inline for (IVector.indices) |i| {
+                    result.v[i] = @mod(position.v[i], w);
+                }
+                return result;
+            }
+            else {
+                return position;
+            }
+        }
+
         pub fn sample(self: Self, value: Vector.Value) Scalar {
             _ = self;
             var v = Vector.init(value);
             const min: IVector = v.floor().cast(isize);
             const max = min.add(IVector.fill(1));
-            const a = min.v;
-            const b = max.v;
+            const a = mod(min).v;
+            const b = mod(max).v;
             const s = v.sub(min.cast(Scalar)).v;
             switch (dimensions) {
                 1 => {
