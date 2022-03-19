@@ -55,7 +55,7 @@ pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32, comptime wrap_:
             if (wrap) |w| {
                 var result: IVector = undefined;
                 inline for (IVector.indices) |i| {
-                    result.v[i] = @mod(position.v[i], w);
+                    result.v[i] = @rem(position.v[i], w);
                 }
                 return result;
             }
@@ -69,7 +69,8 @@ pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32, comptime wrap_:
             var v = Vector.init(value);
             const min: IVector = v.floor().cast(isize);
             const max = min.add(IVector.fill(1));
-            const a = mod(min).v;
+            const a = min.v;
+            // const a = mod(min).v;
             const b = mod(max).v;
             const s = v.sub(min.cast(Scalar)).v;
             switch (dimensions) {
@@ -175,7 +176,7 @@ pub fn Perlin(comptime Scalar_: type, comptime dimensions_: u32, comptime wrap_:
             const grad = gradient(value);
             var dist: Vector = undefined;
             inline for(Vector.indices) |i| {
-                dist.v[i] = position[i] - @intToFloat(Scalar, value[i]);
+                dist.v[i] = @intToFloat(Scalar, value[i]) - position[i];
             }
             return dist.dot(grad);
         }
